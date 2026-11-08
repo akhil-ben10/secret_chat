@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Smooth transition for theme toggling */
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

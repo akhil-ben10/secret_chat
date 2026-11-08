@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Room",
+      "description": "Represents an anonymous multi-participant private chat room",
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "The normalized room code",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "description": "Room lifecycle state",
+          "enum": ["waiting", "active", "closed"]
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp when room was created"
+        },
+        "lastActiveAt": {
+          "type": "number",
+          "description": "Timestamp of most recent activity"
+        },
+        "expiresAt": {
+          "type": "number",
+          "description": "Timestamp when room expires and can be deleted"
+        },
+        "participants": {
+          "type": "object",
+          "description": "Map of user tokens to participant data (unlimited participants)"
+        },
+        "participantCount": {
+          "type": "number",
+          "description": "Current number of participants in the room"
+        },
+        "screenShare": {
+          "type": "object",
+          "description": "Active screen sharing state",
+          "properties": {
+            "active": { "type": "boolean" },
+            "presenterToken": { "type": "string" },
+            "presenterRole": { "type": "string" },
+            "startedAt": { "type": "number" }
+          }
+        }
+      },
+      "required": ["roomId", "status", "createdAt", "lastActiveAt", "expiresAt", "participantCount"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A real-time message or media attachment sent inside a private room",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The message body or media caption",
+          "maxLength": 2000
+        },
+        "senderRole": {
+          "type": "string",
+          "description": "Role of the sender (e.g. Person A, Person B, Person C...)",
+          "maxLength": 50
+        },
+        "senderToken": {
+          "type": "string",
+          "description": "Session token of the sender",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Client timestamp when message was sent"
+        },
+        "attachment": {
+          "type": "object",
+          "description": "Optional file/media attachment (image, video, document)",
+          "properties": {
+            "name": { "type": "string" },
+            "type": { "type": "string" },
+            "size": { "type": "number" },
+            "dataUrl": { "type": "string" },
+            "hasChunks": { "type": "boolean" },
+            "chunkCount": { "type": "number" }
+          }
+        }
+      },
+      "required": ["senderRole", "senderToken", "createdAt"]
+    },
+    "MessageChunk": {
+      "title": "MessageChunk",
+      "description": "A chunk of binary/base64 data for larger files and videos",
+      "type": "object",
+      "properties": {
+        "chunkIndex": { "type": "number" },
+        "data": { "type": "string" }
+      },
+      "required": ["chunkIndex", "data"]
+    },
+    "WebRTCSignal": {
+      "title": "WebRTCSignal",
+      "description": "WebRTC signaling messages for peer-to-peer screen sharing",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "senderToken": { "type": "string" },
+        "targetToken": { "type": "string" },
+        "payload": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["type", "senderToken", "targetToken", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": "Room",
+      "description": "Private room document indexed strictly by secret room code"
+    },
+    "/rooms/{roomId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Real-time messages sent within the private room"
+    },
+    "/rooms/{roomId}/messages/{messageId}/chunks/{chunkId}": {
+      "schema": "MessageChunk",
+      "description": "File data chunks for images, videos, and files exceeding single document limits"
+    },
+    "/rooms/{roomId}/signals/{signalId}": {
+      "schema": "WebRTCSignal",
+      "description": "WebRTC signaling messages for real-time screen sharing"
+    }
+  }
+}

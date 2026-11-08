@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny for all unmatched paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Rooms collection:
+    // Room codes are treated as secrets.
+    // DISALLOW listing room documents to prevent code discovery.
+    match /rooms/{roomId} {
+      allow list: if false;
+
+      // Only direct lookup by room code is allowed
+      allow get: if true;
+
+      // Room creation (First user entering a room code)
+      allow create: if request.resource.data.roomId is string
+                    && request.resource.data.roomId.size() <= 64
+                    && request.resource.data.status in ['waiting', 'active'];
+
+      // Room update (Joining users, screen share state, room activity touch, closing)
+      allow update: if request.resource.data.roomId == roomId
+                    && request.resource.data.status in ['waiting', 'active', 'closed'];
+
+      // Room cleanup
+      allow delete: if true;
+
+      // Messages subcollection for real-time conversation
+      match /messages/{messageId} {
+        allow get, list: if true;
+
+        allow create: if request.resource.data.senderRole is string
+                      && request.resource.data.senderRole.size() > 0
+                      && request.resource.data.senderRole.size() <= 50;
+
+        allow update: if false;
+        allow delete: if true;
+
+        // Chunks subcollection for larger files and videos
+        match /chunks/{chunkId} {
+          allow get, list: if true;
+          allow create: if request.resource.data.chunkIndex is number;
+          allow update: if false;
+          allow delete: if true;
+        }
+      }
+
+      // Signals subcollection for WebRTC live screen sharing
+      match /signals/{signalId} {
+        allow get, list, create, update, delete: if true;
+      }
+    }
+  }
+}

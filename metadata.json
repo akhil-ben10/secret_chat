@@ -1,0 +1,10 @@
+{
+  "name": "Anonymous Private Chat",
+  "description": "A simple, anonymous real-time private chat web app with media sharing (images, videos, files), live screen sharing, and unlimited participants per room.",
+  "requestFramePermissions": [
+    "display-capture"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
